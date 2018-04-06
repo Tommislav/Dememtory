@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include "textengine.h"
 
 
 // read string from file
@@ -24,11 +25,6 @@ void testFuncInOtherFile() {
 	std::cout << "test from game.cpp" << std::endl;
 }
 
-
-
-void sleep(int ms) {
-	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-}
 
 std::string readFromFile(std::string fileName) {
 	std::ifstream t(fileName);

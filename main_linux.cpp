@@ -131,7 +131,8 @@ void clearScreen() {
 // print chars to layers (buffers)
 // animations. boxes. misc utils.
 
-
+// TODO Check this out for keyboard input handling!!!
+// http://www.cplusplus.com/forum/unices/11910/
 
 
 main() {
