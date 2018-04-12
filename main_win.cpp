@@ -8,6 +8,16 @@ using namespace std;
 
 HANDLE hOut;
 HANDLE hIn;
+const int NUM_LAYERS = 2;
+const int MAX_WIDTH = 400;
+const int MAX_HEIGHT = 20;
+const int BUFF_SIZE = MAX_WIDTH * MAX_HEIGHT;
+char layers[NUM_LAYERS][BUFF_SIZE] = {};
+termSize currSize;
+int currLayer;
+int currX;
+int currY;
+
 
 void writeCharAt(SHORT x, SHORT y, char c) {
 	COORD pos = {x, y};
@@ -26,20 +36,77 @@ termSize getTermSize() {
 	bool success = GetConsoleScreenBufferInfo(hOut, &buffer);
 	if (!success) {
 		std::cout << "Error fetching console screen buffer" << std::endl;
-		//return 123;
 	}
 	COORD size = buffer.dwSize;
 	//std::cout << "console width: " << size.X << ", height: " << size.Y << std::endl;
 	//std::cout << "window size: " << buffer.srWindow.Top << ", " << buffer.srWindow.Bottom << std::endl;
 	termSize t;
-	t.width = size.X;
+	t.width = size.X > MAX_WIDTH ? MAX_WIDTH : size.X;
 	t.height = buffer.srWindow.Bottom - buffer.srWindow.Top;
 	return t;
 }
 
+void clearScreen() {
+	layers[NUM_LAYERS][BUFF_SIZE] = {};
+}
+
+void printAt(string str, int x, int y, int layer) {
+	setLayer(layer);
+	printAt(str, x, y);
+}
+
+void printAt(string str, int x, int y) {
+	int i = y * currSize.width + x;
+	int len = str.length();
+	for (int j=0; j<len; j++) {
+		layers[currLayer][i+j] = str[j];
+	}
+}
+
+void setLayer(int layer) {
+	currLayer = layer;
+}
+
+void clearLayer(int layer) {
+}
+
+void setCursorPos(int x, int y) {
+}
+
+void setColor(Color col) {
+}
+
+void flushScreen() {
+	termSize size = getTermSize();
+	for (SHORT y=0; y<size.height; y++) {
+		COORD pos = {0, y};
+		SetConsoleCursorPosition(hOut, pos);
+		char line[size.width] = {0};
+		for (int x=0; x<size.width-2; x++) {
+			line[x] = ' ';
+			int i = y * size.width + x;
+			for (int lay=0; lay<NUM_LAYERS; lay++) {
+				if (layers[lay][i] != 0) {
+					line[x] = layers[lay][i];
+				}
+			}
+		}
+
+		// write line
+		DWORD charsWritten = 0;
+		bool success = WriteConsole(hOut, &line, size.width, &charsWritten, NULL);
+		if (!success) {
+			pos = {0,0};
+			SetConsoleCursorPosition(hOut, pos);
+			std::cout << "ERROR WRITING TO OUTPUT BUFFER: " << GetLastError() << std::endl;
+		}
+	}
+	std::cout << std::flush;
+}
 
 
-main() {
+int main() {
+
 	// https://docs.microsoft.com/en-us/windows/console/writeconsole
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -50,7 +117,24 @@ main() {
 		return 123;
 	}
 
+	currSize = getTermSize();
 
+	setLayer(0);
+	printAt("rad nummer 1", 1,0);
+	printAt("En till rad", 0, 2);
+	setLayer(1);
+	printAt("###", 5, 1);
+	flushScreen();
+
+	char c = layers[0][0];
+	//std::cout << "--> " << c << std::flush;
+
+	sleep(5000);
+
+
+
+	COORD pos = {0,0};
+	SetConsoleCursorPosition(hOut, pos);
 
 
 

@@ -6,9 +6,6 @@
 // read string from file
 #include <fstream>
 
-// sleep
-#include <chrono>
-#include <thread>
 
 
 int sleepMs = 50;
@@ -45,6 +42,12 @@ void initGame() {
 	gameIsRunning = true;
 	//std::cout << data << std::endl;
 }
+
+
+
+
+
+
 
 void tick() {
 	char s = data[cnt++];
