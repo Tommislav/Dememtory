@@ -11,14 +11,19 @@
 struct termSize {
 	int width, height;
 };
+struct coord {
+	int x, y;
+};
 
 enum Color { def, red, blue, green, white };
 
 void clearScreen();
 termSize getTermSize();
 void setCursorPos(int x, int y);
+coord getCursorPos();
 void printAt(std::string str, int x, int y);
 void print(std::string);
+void print(char c);
 
 void setColor(Color col);
 void flushScreen();

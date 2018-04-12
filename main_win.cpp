@@ -61,12 +61,29 @@ void setCursorPos(int x, int y) {
 	currY = y;
 }
 
+coord getCursorPos(){
+	coord c;
+	c.x = currX;
+	c.y = currY;
+	return c;
+}
+
 void print(string str) {
 	int i = currY * currSize.width + currX;
 	int len = str.length();
 	for (int j=0; j<len; j++) {
 		textBuffer[i+j] = str[j];
 	}
+}
+
+void print(char c) {
+	int i=currY * currSize.width + currX;
+	currX ++;
+	if (currX >= currSize.width) {
+		currX = 0;
+		currY++;
+	}
+	textBuffer[i] = c;
 }
 
 void setColor(Color col) {
@@ -92,6 +109,10 @@ void flushScreen() {
 			std::cout << "ERROR WRITING TO OUTPUT BUFFER: " << GetLastError() << std::endl;
 		}
 	}
+
+	COORD pos = {0, 0};
+	SetConsoleCursorPosition(hOut, pos);
+	std::cout << std::flush;
 }
 
 
@@ -109,21 +130,15 @@ int main() {
 
 	currSize = getTermSize();
 
-	printAt("rad nummer 1", 1,0);
-	printAt("En till rad", 0, 2);
-	printAt("###", 5, 1);
-
-	setCursorPos(0,5);
-	print("I know I said that if I lived to 100 I'd not regret what happened last night. But I woke up this morning and a century had passed. Sorry.");
-	flushScreen();
-	sleep(5000);
-
-	flushScreen();
-	sleep(5000);
-
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
 
+	initGame();
+	bool lp = true;
+	while(lp) {
+		lp = tick();
+		sleep(32);
+	}
 
 
 	// Handle input
@@ -137,6 +152,9 @@ int main() {
 		sleep(5000);
 		return 1;
 	}
+
+
+
 
 	
 

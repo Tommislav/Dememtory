@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "textengine.h"
+#include "writer.cpp"
 
 
 // read string from file
@@ -34,22 +35,46 @@ std::string readFromFile(std::string fileName) {
 	return buffer;
 }
 
+
+
+
+std::string str1 = "I know I said that if I lived to 100 I'd not regret what happened last night. But I woke up this morning and a century had passed. Sorry. -Geoff Dyer";
+
+std::string str2 = "What scares me?#n Oh, I thought you'd never ask.#n Reality scares me.#n I'm afraid of the possibility that our conversation isn't real.#n I'm afraid of the possibility that all of my friends and relatives, and even my girlfriend aren't real. I'm afraid of the possibility that this world isn't real.#n Or that I'm not real.#n Just your reflection.";
+
+
+void test(){ 
+	clearScreen();
+	setCursorPos(0,0);
+	print(str2);
+	flushScreen();
+}
+
 void initGame() {
+
+	wrSetText(str2);
+
+	/*
 	sleepMs = 50;
 	cnt = 0;
 	waitingForInput = false;
 	data = readFromFile("data");
 	gameIsRunning = true;
 	//std::cout << data << std::endl;
+	*/
 }
 
+bool tick() {
 
+	if (!wrAtEnd()) {
+		wrPutChar();
+		flushScreen();
+		return true;
+	}
 
+	return false;
 
-
-
-
-void tick() {
+/*
 	char s = data[cnt++];
 	if (s == '#') {
 		// COMMAND
@@ -84,4 +109,5 @@ void tick() {
 	}
 	std::cout << s << std::flush;
 	gameIsRunning = cnt < data.length();
+	*/
 }
