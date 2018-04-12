@@ -16,13 +16,10 @@ enum Color { def, red, blue, green, white };
 
 void clearScreen();
 termSize getTermSize();
-void printAt(std::string str, int x, int y);
-
-void printAt(std::string str, int x, int y, int layer);
-
-void setLayer(int layer);
-void clearLayer(int layer);
 void setCursorPos(int x, int y);
+void printAt(std::string str, int x, int y);
+void print(std::string);
+
 void setColor(Color col);
 void flushScreen();
 

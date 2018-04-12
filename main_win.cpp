@@ -8,13 +8,11 @@ using namespace std;
 
 HANDLE hOut;
 HANDLE hIn;
-const int NUM_LAYERS = 2;
 const int MAX_WIDTH = 400;
-const int MAX_HEIGHT = 20;
+const int MAX_HEIGHT = 40;
 const int BUFF_SIZE = MAX_WIDTH * MAX_HEIGHT;
-char layers[NUM_LAYERS][BUFF_SIZE] = {};
+char textBuffer[BUFF_SIZE] = {};
 termSize currSize;
-int currLayer;
 int currX;
 int currY;
 
@@ -40,37 +38,35 @@ termSize getTermSize() {
 	COORD size = buffer.dwSize;
 	//std::cout << "console width: " << size.X << ", height: " << size.Y << std::endl;
 	//std::cout << "window size: " << buffer.srWindow.Top << ", " << buffer.srWindow.Bottom << std::endl;
+	int height = buffer.srWindow.Bottom - buffer.srWindow.Top;
+	if (height > MAX_HEIGHT) { height = MAX_HEIGHT; }
 	termSize t;
 	t.width = size.X > MAX_WIDTH ? MAX_WIDTH : size.X;
-	t.height = buffer.srWindow.Bottom - buffer.srWindow.Top;
+	t.height = height;
 	return t;
 }
 
 void clearScreen() {
-	layers[NUM_LAYERS][BUFF_SIZE] = {};
-}
-
-void printAt(string str, int x, int y, int layer) {
-	setLayer(layer);
-	printAt(str, x, y);
+	textBuffer[BUFF_SIZE] = {};
 }
 
 void printAt(string str, int x, int y) {
-	int i = y * currSize.width + x;
-	int len = str.length();
-	for (int j=0; j<len; j++) {
-		layers[currLayer][i+j] = str[j];
-	}
+	setCursorPos(x,y);
+	print(str);
 }
 
-void setLayer(int layer) {
-	currLayer = layer;
-}
-
-void clearLayer(int layer) {
-}
 
 void setCursorPos(int x, int y) {
+	currX = x;
+	currY = y;
+}
+
+void print(string str) {
+	int i = currY * currSize.width + currX;
+	int len = str.length();
+	for (int j=0; j<len; j++) {
+		textBuffer[i+j] = str[j];
+	}
 }
 
 void setColor(Color col) {
@@ -82,14 +78,9 @@ void flushScreen() {
 		COORD pos = {0, y};
 		SetConsoleCursorPosition(hOut, pos);
 		char line[size.width] = {0};
-		for (int x=0; x<size.width-2; x++) {
-			line[x] = ' ';
+		for (int x=0; x<size.width; x++) {
 			int i = y * size.width + x;
-			for (int lay=0; lay<NUM_LAYERS; lay++) {
-				if (layers[lay][i] != 0) {
-					line[x] = layers[lay][i];
-				}
-			}
+			line[x] = textBuffer[i] == 0 ? ' ' : textBuffer[i];
 		}
 
 		// write line
@@ -101,7 +92,6 @@ void flushScreen() {
 			std::cout << "ERROR WRITING TO OUTPUT BUFFER: " << GetLastError() << std::endl;
 		}
 	}
-	std::cout << std::flush;
 }
 
 
@@ -119,19 +109,17 @@ int main() {
 
 	currSize = getTermSize();
 
-	setLayer(0);
 	printAt("rad nummer 1", 1,0);
 	printAt("En till rad", 0, 2);
-	setLayer(1);
 	printAt("###", 5, 1);
+
+	setCursorPos(0,5);
+	print("I know I said that if I lived to 100 I'd not regret what happened last night. But I woke up this morning and a century had passed. Sorry.");
 	flushScreen();
-
-	char c = layers[0][0];
-	//std::cout << "--> " << c << std::flush;
-
 	sleep(5000);
 
-
+	flushScreen();
+	sleep(5000);
 
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
