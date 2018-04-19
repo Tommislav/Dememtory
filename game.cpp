@@ -40,28 +40,20 @@ std::string readFromFile(std::string fileName) {
 
 std::string str1 = "I know I said that if I lived to 100 I'd not regret what happened last night. But I woke up this morning and a century had passed. Sorry. -Geoff Dyer";
 
-std::string str2 = "What scares me?#n Oh, I thought you'd never ask.#n Reality scares me.#n I'm afraid of the possibility that our conversation isn't real.#n I'm afraid of the possibility that all of my friends and relatives, and even my girlfriend aren't real. I'm afraid of the possibility that this world isn't real.#n Or that I'm not real.#n Just your reflection.";
+std::string str2 = "What scares me?#n #p2Oh, I thought you'd never ask.#n Reality scares me.#n #p2#f0I'm afraid of the possibility that our conversation isn't real.#n I'm afraid of the possibility that all of my friends and relatives, and even my girlfriend aren't real#p2#f3......#p2#f1 I'm afraid of the possibility that this world isn't real.#n Or that I'm not real.#n Just your reflection.#p3#p3#p3 ";
+
+std::string str3 = "Line 1#nLine2#nLine3";
 
 
 void test(){ 
 	clearScreen();
 	setCursorPos(0,0);
-	print(str2);
+	print(str3);
 	flushScreen();
 }
 
 void initGame() {
-
 	wrSetText(str2);
-
-	/*
-	sleepMs = 50;
-	cnt = 0;
-	waitingForInput = false;
-	data = readFromFile("data");
-	gameIsRunning = true;
-	//std::cout << data << std::endl;
-	*/
 }
 
 bool tick(int millisec) {

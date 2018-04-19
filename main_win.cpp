@@ -12,6 +12,7 @@ const int MAX_WIDTH = 400;
 const int MAX_HEIGHT = 40;
 const int BUFF_SIZE = MAX_WIDTH * MAX_HEIGHT;
 char textBuffer[BUFF_SIZE] = {};
+CHAR_INFO outputBuffer[BUFF_SIZE] = {};
 termSize currSize;
 int currX;
 int currY;
@@ -72,6 +73,9 @@ void print(string str) {
 	int i = currY * currSize.width + currX;
 	int len = str.length();
 	for (int j=0; j<len; j++) {
+		//outputBuffer[i+j].Char.AsciiChar = str[j];
+		outputBuffer[i+j].Char.UnicodeChar = str[j];
+		outputBuffer[i+j].Attributes = 8;
 		textBuffer[i+j] = str[j];
 	}
 }
@@ -84,6 +88,9 @@ void print(char c) {
 		currY++;
 	}
 	textBuffer[i] = c;
+	//outputBuffer[i].Char.AsciiChar = c;
+	outputBuffer[i].Char.UnicodeChar = c;
+	outputBuffer[i].Attributes = 1 | 2 | 4;
 }
 
 void setColor(Color col) {
@@ -92,40 +99,28 @@ void setColor(Color col) {
 LARGE_INTEGER freq;
 
 void flushScreen() {
+	// http://cecilsunkure.blogspot.se/2011/11/windows-console-game-writing-to-console.html
 	LARGE_INTEGER start;
 	QueryPerformanceCounter(&start);
 	termSize size = getTermSize();
-	for (SHORT y=0; y<size.height; y++) {
-		COORD pos = {0, y};
-		SetConsoleCursorPosition(hOut, pos);
-		char line[BUFF_SIZE] = {0};
-		for (int x=0; x<size.width; x++) {
-			int i = y * size.width + x;
-			line[x] = textBuffer[i] == 0 ? ' ' : textBuffer[i];
-		}
+	COORD buffSize = {(SHORT)size.width,(SHORT)size.height};
+	COORD buffPos = {0,0};
+	SMALL_RECT smallRect = {0,0,(SHORT)size.width,(SHORT)size.height};
+	WriteConsoleOutput(hOut, &outputBuffer[0], buffSize, buffPos, &smallRect);
 
-		// write line
-		DWORD charsWritten = 0;
-		bool success = WriteConsole(hOut, &line, size.width, &charsWritten, NULL);
-		if (!success) {
-			pos = {0,0};
-			SetConsoleCursorPosition(hOut, pos);
-			std::cout << "ERROR WRITING TO OUTPUT BUFFER: " << GetLastError() << std::endl;
-		}
-	}
-
-	COORD pos = {0, 0};
+	COORD pos = {(SHORT)currX, (SHORT)currY};
 	SetConsoleCursorPosition(hOut, pos);
 	LARGE_INTEGER end;
 	QueryPerformanceCounter(&end);
 
-	std::cout << (1000*(end.QuadPart - start.QuadPart))/freq.QuadPart << " " << std::flush;
+	//std::cout << (1000*(end.QuadPart - start.QuadPart))/freq.QuadPart << " " << std::flush;
 }
 
 
 
 int main() {
 
+	sleep(5000);
 	// https://docs.microsoft.com/en-us/windows/console/writeconsole
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hIn = GetStdHandle(STD_INPUT_HANDLE);
