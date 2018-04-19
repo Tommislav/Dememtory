@@ -64,11 +64,10 @@ void initGame() {
 	*/
 }
 
-bool tick() {
+bool tick(int millisec) {
 
 	if (!wrAtEnd()) {
-		wrPutChar();
-		flushScreen();
+		wrPutChar(millisec);
 		return true;
 	}
 

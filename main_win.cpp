@@ -89,12 +89,16 @@ void print(char c) {
 void setColor(Color col) {
 }
 
+LARGE_INTEGER freq;
+
 void flushScreen() {
+	LARGE_INTEGER start;
+	QueryPerformanceCounter(&start);
 	termSize size = getTermSize();
 	for (SHORT y=0; y<size.height; y++) {
 		COORD pos = {0, y};
 		SetConsoleCursorPosition(hOut, pos);
-		char line[size.width] = {0};
+		char line[BUFF_SIZE] = {0};
 		for (int x=0; x<size.width; x++) {
 			int i = y * size.width + x;
 			line[x] = textBuffer[i] == 0 ? ' ' : textBuffer[i];
@@ -112,8 +116,12 @@ void flushScreen() {
 
 	COORD pos = {0, 0};
 	SetConsoleCursorPosition(hOut, pos);
-	std::cout << std::flush;
+	LARGE_INTEGER end;
+	QueryPerformanceCounter(&end);
+
+	std::cout << (1000*(end.QuadPart - start.QuadPart))/freq.QuadPart << " " << std::flush;
 }
+
 
 
 int main() {
@@ -133,11 +141,21 @@ int main() {
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
 
+	LARGE_INTEGER prevTime;
+	LARGE_INTEGER currTime;
+	QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&prevTime);
+	LONGLONG msPassed;
+
 	initGame();
 	bool lp = true;
 	while(lp) {
-		lp = tick();
-		sleep(32);
+		QueryPerformanceCounter(&currTime);
+		msPassed = (1000*(currTime.QuadPart - prevTime.QuadPart)) / freq.QuadPart;
+		prevTime = currTime;
+
+		lp = tick(msPassed);
+		sleep(1);
 	}
 
 
@@ -266,12 +284,6 @@ int main() {
 // http://www.cplusplus.com/forum/general/18200/
 // or
 // https://stackoverflow.com/questions/2616906/how-do-i-output-coloured-text-to-a-linux-terminal
-	initGame();
-	while (getGameIsRunning()) {
-		tick();
-		sleep(getSleepMs());
-	}
-	cin.ignore();
 	return 0;
 }
 

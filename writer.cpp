@@ -7,6 +7,8 @@ using namespace std;
 string wrText = "";
 int wrPos = 0;
 int wrLen = 0;
+int wrPause = 30;
+int wrCounter = 0;
 
 void wrSetText(string text) {
 	wrText = text;
@@ -32,17 +34,30 @@ void wrParseCommand(char command, char instr) {
 
 
 // USE THIS!
-bool wrPutChar() {
+bool wrPutChar(int millisec) {
 	if (wrAtEnd()) {return true;}
 
+	wrCounter += millisec;
+	if (wrCounter < wrPause) {
+		return false;
+	}
+
+	wrCounter -= wrPause;
+	if (wrCounter < 0) {wrCounter = 0;}
+
+
 	char c = wrText[wrPos];
-	if (c == '#') {
+	if (c == '^') {
+		wrParseCommand('n', ' ');
+	}
+	else if (c == '#') {
 		wrParseCommand(wrText[wrPos+1], wrText[wrPos+2]);
 		wrPos += 3;
-		return wrPutChar();
+		return wrPutChar(millisec);
 	}
 
 	print(c);
+	flushScreen();
 	wrPos++;
 	return wrAtEnd();
 }
