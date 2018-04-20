@@ -26,6 +26,7 @@ void print(std::string);
 void print(char c);
 
 void setColor(Color col);
+void setColorAt(Color col, int x, int y);
 void flushScreen();
 
 void sleep(int ms) {

@@ -16,6 +16,7 @@ CHAR_INFO outputBuffer[BUFF_SIZE] = {};
 termSize currSize;
 int currX;
 int currY;
+int currCol;
 
 
 void writeCharAt(SHORT x, SHORT y, char c) {
@@ -90,10 +91,22 @@ void print(char c) {
 	textBuffer[i] = c;
 	//outputBuffer[i].Char.AsciiChar = c;
 	outputBuffer[i].Char.UnicodeChar = c;
-	outputBuffer[i].Attributes = 1 | 2 | 4;
+	outputBuffer[i].Attributes = currCol;
 }
 
 void setColor(Color col) {
+	setColorAt(col, currX, currY);
+}
+
+void setColorAt(Color col, int x, int y) {
+	int i= y * currSize.width + x;
+	currCol = 1 | 2 | 4; // default color
+	switch(col) {
+		case red: currCol = 4 | 8; break;
+		case green: currCol = 2 | 8; break;
+		case blue: currCol = 1 | 8; break;
+	}
+	outputBuffer[i].Attributes = currCol;
 }
 
 LARGE_INTEGER freq;
@@ -119,7 +132,6 @@ void flushScreen() {
 
 
 int main() {
-
 	sleep(5000);
 	// https://docs.microsoft.com/en-us/windows/console/writeconsole
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -135,6 +147,7 @@ int main() {
 
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
+	setColor(Color::def);
 
 	LARGE_INTEGER prevTime;
 	LARGE_INTEGER currTime;
@@ -154,6 +167,7 @@ int main() {
 	}
 
 
+	sleep(2000);
 	// Handle input
 	// https://docs.microsoft.com/en-us/windows/console/reading-input-buffer-events
 	std::cout << "Press any key (escape to continue): " << std::flush;

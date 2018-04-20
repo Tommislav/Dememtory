@@ -36,11 +36,18 @@ void wrParseCommand(char command, char instr) {
 		else if (instr == '2') { wrPause = 1000; }
 		else if (instr == '3') { wrPause = 1500; }
 	}
-	if (command == 'f') { // framerate
-		if (instr == '0') { wrWait = 10; }
+	if (command == 's') { // speed 
+		if (instr == '0') { wrWait = 5; }
 		else if (instr == '1') { wrWait = 30; } 
 		else if (instr == '2') { wrWait = 50; } 
 		else if (instr == '3') { wrWait = 150; } 
+	}
+	if (command == 'c') { // color
+		if (instr == 'R') { setColor(Color::red); }
+		else if (instr == 'G') { setColor(Color::green); }
+		else if (instr == 'B') { setColor(Color::blue); }
+		else if (instr == 'W') { setColor(Color::white); }
+		else if (instr == 'D') { setColor(Color::def); }
 	}
 
 }
@@ -49,23 +56,26 @@ void wrParseCommand(char command, char instr) {
 
 // USE THIS!
 bool wrPutChar(int millisec) {
-	if (wrAtEnd()) {return true;}
+	if (wrAtEnd()) {return false;}
 
-	if (wrPause > 0) {
-		wrPause -= millisec;
+	if (millisec > -1) {
+
 		if (wrPause > 0) {
+			wrPause -= millisec;
+			if (wrPause > 0) {
+				return false;
+			}
+		}
+
+		wrCounter += millisec;
+		if (wrCounter < wrWait) {
 			return false;
 		}
+
+		wrCounter -= wrWait;
+		if (wrCounter < 0) {wrCounter = 0;}
+
 	}
-
-	wrCounter += millisec;
-	if (wrCounter < wrWait) {
-		return false;
-	}
-
-	wrCounter -= wrWait;
-	if (wrCounter < 0) {wrCounter = 0;}
-
 
 	char c = wrText[wrPos];
 	if (c == '^') {
@@ -80,8 +90,7 @@ bool wrPutChar(int millisec) {
 	}
 
 	print(c);
-	flushScreen();
 	wrPos++;
-	return wrAtEnd();
+	return true;
 }
 

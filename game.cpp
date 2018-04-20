@@ -45,60 +45,81 @@ std::string str2 = "What scares me?#n #p2Oh, I thought you'd never ask.#n Realit
 std::string str3 = "Line 1#nLine2#nLine3";
 
 
-void test(){ 
-	clearScreen();
-	setCursorPos(0,0);
-	print(str3);
-	flushScreen();
-}
+std::string ld41 = "#n  LUDUM DARE 41 #p2#s0....................................................................#p2#n "
+" #s2#cBTOOLS:#cD   #s1 #p1C++, Custom engine. No libraries.#p1#n "
+" #cBIDE:#cD      #p1VIM. Probably Visual Studio for debugging.#p0#n "
+" #cBGRAPHICS:#cD #p1Nothing! #p1Text only baby! #p1That plays straight in your CMD!#p0#n #n "
+" #p2For so long I've been wanting to get down and dirty in C++, so now - with WAY too#n "
+" little preparations - I've decided to write my first complete C++ project ever.#n "
+" #s2WHAT COULD POSSIBLY GO WRONG#s1?!? #p1And lets do it without any libraries as well!#n "
+" #cR#s3Handmade Hero #cDstyle! #p1#s1Whish me luck #p2#s2because #p1 ";
+
+std::string imin = 
+" IIIIIIIIII MMMMMMMM               MMMMMMMM     IIIIIIIIII NNNNNNNN        NNNNNNNN#n " 
+" I::::::::I M:::::::M             M:::::::M     I::::::::I N:::::::N       N::::::N#n "
+" I::::::::I M::::::::M           M::::::::M     I::::::::I N::::::::N      N::::::N#n "
+" II::::::II M:::::::::M         M:::::::::M     II::::::II N:::::::::N     N::::::N#n "
+"   I::::I   M::::::::::M       M::::::::::M       I::::I   N::::::::::N    N::::::N#n "
+"   I::::I   M:::::::::::M     M:::::::::::M       I::::I   N:::::::::::N   N::::::N#n "
+"   I::::I   M:::::::M::::M   M::::M:::::::M       I::::I   N:::::::N::::N  N::::::N#n "
+"   I::::I   M::::::M M::::M M::::M M::::::M       I::::I   N::::::N N::::N N::::::N#n "
+"   I::::I   M::::::M  M::::M::::M  M::::::M       I::::I   N::::::N  N::::N:::::::N#n "
+"   I::::I   M::::::M   M:::::::M   M::::::M       I::::I   N::::::N   N:::::::::::N#n "
+"   I::::I   M::::::M    M:::::M    M::::::M       I::::I   N::::::N    N::::::::::N#n "
+"   I::::I   M::::::M     MMMMM     M::::::M       I::::I   N::::::N     N:::::::::N#n "
+" II::::::II M::::::M               M::::::M     II::::::II N::::::N      N::::::::N#n "
+" I::::::::I M::::::M               M::::::M     I::::::::I N::::::N       N:::::::N#n "
+" I::::::::I M::::::M               M::::::M     I::::::::I N::::::N        N::::::N#n "
+" IIIIIIIIII MMMMMMMM               MMMMMMMM     IIIIIIIIII NNNNNNNN         NNNNNNN";
+
+
+
+bool colorFlash = false;
+int tickWait = 0;
+int colCycle = 0;
 
 void initGame() {
-	wrSetText(str2);
+	setCursorPos(0, 0);
+	setColor(Color::def);
+	wrSetText(ld41);
 }
 
 bool tick(int millisec) {
 
-	if (!wrAtEnd()) {
-		wrPutChar(millisec);
+	bool dirty = false;
+	if (!wrAtEnd() && !colorFlash) {
+		dirty = wrPutChar(millisec);
+		if (dirty) { flushScreen(); }
 		return true;
 	}
 
-	return false;
-
-/*
-	char s = data[cnt++];
-	if (s == '#') {
-		// COMMAND
-		char cmd = data[cnt++];
-		char val = data[cnt++];
-		s = data[cnt++];
-
-		if (cmd == 's') {
-			switch(val) {
-				case '0':
-					sleepMs = 50;
-					break;
-				case '1':
-					sleepMs = 800;
-					break;
-			}
+	if (!colorFlash) {
+		wrSetText(imin);
+		setCursorPos(0, 11);
+		setColor(Color::green);
+		while(!wrAtEnd()) {
+			wrPutChar(-1);
 		}
-		else if (cmd == 'p') {
-			sleep(500);
-		}
-		else if (cmd == 'c') {
-			switch(val) {
-				case 'R': // red
-					std::cout << "\033[31m";
-					break;
-				case 'D':
-					    std::cout << "\033[0m";
-					    break;
-			}
+		flushScreen();
+		colorFlash = true;
+		return true;
+	}
 
+	tickWait -= millisec;	
+	if (tickWait > 0) {return true; }
+	tickWait = 20;
+
+	// color flashing
+	++colCycle %= 2;
+	for (int x=0; x<83; x++) {
+		for (int y=11; y<27; y++) {
+			Color c = colCycle == 0 ? Color::red : Color::blue;
+			setColorAt(c, x, y);
 		}
 	}
-	std::cout << s << std::flush;
-	gameIsRunning = cnt < data.length();
-	*/
+	flushScreen();	
+
+
+
+	return true;
 }
