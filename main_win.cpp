@@ -12,25 +12,13 @@ HANDLE hIn;
 const int MAX_WIDTH = 400;
 const int MAX_HEIGHT = 40;
 const int BUFF_SIZE = MAX_WIDTH * MAX_HEIGHT;
-char textBuffer[BUFF_SIZE] = {};
 CHAR_INFO outputBuffer[BUFF_SIZE] = {};
+string debugStr = "";
 termSize currSize;
 int currX;
 int currY;
 int currCol;
 
-
-void writeCharAt(SHORT x, SHORT y, char c) {
-	COORD pos = {x, y};
-	SetConsoleCursorPosition(hOut, pos);
-	std::cout << c << std::flush;
-}
-
-void printAt(SHORT x, SHORT y, std::string s) {
-	COORD pos = {x, y};
-	SetConsoleCursorPosition(hOut, pos);
-	std::cout << s << std::flush;
-}
 
 termSize getTermSize() {
 	CONSOLE_SCREEN_BUFFER_INFO buffer;
@@ -39,20 +27,21 @@ termSize getTermSize() {
 		std::cout << "Error fetching console screen buffer" << std::endl;
 	}
 	COORD size = buffer.dwSize;
-	//std::cout << "console width: " << size.X << ", height: " << size.Y << std::endl;
-	//std::cout << "window size: " << buffer.srWindow.Top << ", " << buffer.srWindow.Bottom << std::endl;
 	int height = buffer.srWindow.Bottom - buffer.srWindow.Top;
 	int width = buffer.srWindow.Right - buffer.srWindow.Left;
 	if (height > MAX_HEIGHT) { height = MAX_HEIGHT; }
 	termSize t;
-	t.width = 70;//width > MAX_WIDTH ? MAX_WIDTH : size.X;
+	t.width = width > MAX_WIDTH ? MAX_WIDTH : width;
 	t.height = height;
 	return t;
 }
 
 void clearScreen() {
-	textBuffer[BUFF_SIZE] = {};
+	for (int i=0; i<BUFF_SIZE; i++) {
+		outputBuffer[i] = {};
+	}
 }
+
 
 void setCursorPos(int x, int y) {
 	COORD pos = {(SHORT)x, (SHORT)y};
@@ -83,10 +72,8 @@ void print(string str) {
 	int i = currY * currSize.width + currX;
 	int len = str.length();
 	for (int j=0; j<len; j++) {
-		//outputBuffer[i+j].Char.AsciiChar = str[j];
 		outputBuffer[i+j].Char.UnicodeChar = str[j];
 		outputBuffer[i+j].Attributes = 8;
-		textBuffer[i+j] = str[j];
 	}
 }
 
@@ -94,7 +81,6 @@ void printAt(string s, int x, int y) {
 }
 
 void printAt(char c, int x, int y, Color col) {
-	//std::cout << c << std::flush;
 	int i = y * currSize.width + x;	
 	outputBuffer[i].Char.UnicodeChar = c;	
 	outputBuffer[i].Attributes = ColorToInt(col);
@@ -108,10 +94,16 @@ void print(char c) {
 		currX = 0;
 		currY++;
 	}
-	textBuffer[i] = c;
-	//outputBuffer[i].Char.AsciiChar = c;
 	outputBuffer[i].Char.UnicodeChar = c;
 	outputBuffer[i].Attributes = currCol;
+}
+
+void debug(string s) {
+	debugStr = s;
+}
+
+void clearDebug(int y) {
+	debugStr = "";
 }
 
 void setColor(Color col) {
@@ -136,6 +128,11 @@ void flushScreen() {
 	SMALL_RECT smallRect = {0,0,(SHORT)size.width,(SHORT)size.height};
 	WriteConsoleOutput(hOut, &outputBuffer[0], buffSize, buffPos, &smallRect);
 
+	if (debugStr != "") {
+		setCursorPos(0,0);
+		cout << debugStr << flush;
+	}
+
 	LARGE_INTEGER end;
 	QueryPerformanceCounter(&end);
 
@@ -144,9 +141,9 @@ void flushScreen() {
 
 void shakeScreen(int x, int y) {
 	HWND consoleWindow = GetConsoleWindow();
-#ifndef tempDev
+#ifndef cygwin 
 // for some reason this crashes when compiling with cygwin g++
-	LPRECT currPos;
+	LPRECT currPos = {};
 	BOOL success = GetWindowRect(consoleWindow, currPos);
 	if (success) {
 		x += (int)currPos->left;
@@ -162,8 +159,6 @@ void shakeScreen(int x, int y) {
 
 	SetWindowPos(consoleWindow, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
-
-
 
 
 int main() {
@@ -196,8 +191,6 @@ int main() {
 
 	DWORD numRead;
 	INPUT_RECORD inputRecBuffer[128];
-	bool keyIsDown = false;
-	bool keyWasDown = false;
 
 	if (!SetConsoleMode(hIn, ENABLE_WINDOW_INPUT)) {
 		std::cout << "Error setting console mode" << std::endl;
@@ -210,33 +203,29 @@ int main() {
 	while(lp) {
 
 		// CHECK INPUT
+
+		//	clear keydown array in game.cpp
+		numKeysDown = 0;
+
 		DWORD numEvents = 0;
 		GetNumberOfConsoleInputEvents(hIn, &numEvents);
 		if (numEvents > 0) {
 			ReadConsoleInput(hIn, inputRecBuffer, 128, &numRead);
 			for (int i=0; i<numRead; i++) {
-				switch(inputRecBuffer[i].EventType) {
-					case KEY_EVENT:
-						KEY_EVENT_RECORD keyEvent = inputRecBuffer[i].Event.KeyEvent;
+				if (inputRecBuffer[i].EventType == KEY_EVENT) {
+					KEY_EVENT_RECORD keyEvent = inputRecBuffer[i].Event.KeyEvent;
 
-						keyIsDown = keyEvent.bKeyDown;
-						if (keyIsDown != keyWasDown) {
-							if (keyIsDown) {
+					if (keyEvent.uChar.UnicodeChar == 32) {
+						// skipButton is in game.cpp
+						skipButtonDown = keyEvent.bKeyDown;
+					}
 
-								if (keyEvent.uChar.UnicodeChar == 27) {
-									return 0;
-								}
+					if (keyEvent.bKeyDown || keyEvent.wRepeatCount > 0) {
+						if (keyEvent.uChar.UnicodeChar == 27) { return 0; } // ESC
+						keysDown[numKeysDown] = keyEvent.uChar.UnicodeChar;
+						numKeysDown++;
 
-								//printAt(5, 5, "KEY IS DOWN! ");
-								//writeCharAt(5, 6, ' ');
-								//std::cout << "ascii: " << keyEvent.uChar.AsciiChar << std::flush;
-								//writeCharAt(5, 7, ' ');
-								//std::cout << "unicode: " << keyEvent.uChar.UnicodeChar << std::flush;
-
-							}
-						}
-						keyWasDown = keyIsDown;
-						break;
+					}
 				}
 			}
 		}
