@@ -186,7 +186,6 @@ int main() {
 	SetConsoleCursorPosition(hOut, pos);
 	setColor(Color::def);
 
-sleep(6000);
 	currSize = getTermSize();
 
 	LARGE_INTEGER prevTime;

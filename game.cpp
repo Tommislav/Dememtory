@@ -6,22 +6,22 @@
 
 using namespace std;
 
-bool waitingForInput = false;
-bool gameIsRunning = false;
 string currentState = "";
+bool (*stateFunction)(int);
 
 Writer writer;
 termSize screenSize;
 
+void setGameState(string);
+
 void initGame() {
 	screenSize = getTermSize();
-	wrSetText(writer, textStart, 0, 1);
+	setGameState("start");
 }
 
-bool defaultWrite(int);
 
 bool tick(int millisec) {
-	return defaultWrite(millisec);
+	return stateFunction(millisec);
 }
 
 
@@ -43,5 +43,6 @@ void setGameState(string state) {
 	currentState = state;
 	if (state == "start") {
 		wrSetText(writer, textStart, 0, 1);
+		stateFunction = &defaultWrite;
 	}
 }
