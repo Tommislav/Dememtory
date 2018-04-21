@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <windows.h>
 #include "game.cpp"
@@ -41,9 +42,10 @@ termSize getTermSize() {
 	//std::cout << "console width: " << size.X << ", height: " << size.Y << std::endl;
 	//std::cout << "window size: " << buffer.srWindow.Top << ", " << buffer.srWindow.Bottom << std::endl;
 	int height = buffer.srWindow.Bottom - buffer.srWindow.Top;
+	int width = buffer.srWindow.Right - buffer.srWindow.Left;
 	if (height > MAX_HEIGHT) { height = MAX_HEIGHT; }
 	termSize t;
-	t.width = size.X > MAX_WIDTH ? MAX_WIDTH : size.X;
+	t.width = 70;//width > MAX_WIDTH ? MAX_WIDTH : size.X;
 	t.height = height;
 	return t;
 }
@@ -52,15 +54,9 @@ void clearScreen() {
 	textBuffer[BUFF_SIZE] = {};
 }
 
-void printAt(string str, int x, int y) {
-	setCursorPos(x,y);
-	print(str);
-}
-
-
 void setCursorPos(int x, int y) {
-	currX = x;
-	currY = y;
+	COORD pos = {(SHORT)x, (SHORT)y};
+	SetConsoleCursorPosition(hOut, pos);
 }
 
 coord getCursorPos(){
@@ -68,6 +64,19 @@ coord getCursorPos(){
 	c.x = currX;
 	c.y = currY;
 	return c;
+}
+
+int ColorToInt(Color col) {
+	int currCol = 1 | 2 | 4;
+	switch(col) {
+		case red: currCol = 4 | 8; break;
+		case green: currCol = 2 | 8; break;
+		case blue: currCol = 1 | 2 | 8; break;
+		case white: currCol = 1 | 2 | 4 | 8; break;
+		case purple: currCol = 1 | 4 | 8; break;
+		default: currCol = 1 | 2 | 4; break;
+	}
+	return currCol;
 }
 
 void print(string str) {
@@ -80,6 +89,17 @@ void print(string str) {
 		textBuffer[i+j] = str[j];
 	}
 }
+
+void printAt(string s, int x, int y) {
+}
+
+void printAt(char c, int x, int y, Color col) {
+	//std::cout << c << std::flush;
+	int i = y * currSize.width + x;	
+	outputBuffer[i].Char.UnicodeChar = c;	
+	outputBuffer[i].Attributes = ColorToInt(col);
+}
+
 
 void print(char c) {
 	int i=currY * currSize.width + currX;
@@ -100,12 +120,7 @@ void setColor(Color col) {
 
 void setColorAt(Color col, int x, int y) {
 	int i= y * currSize.width + x;
-	currCol = 1 | 2 | 4; // default color
-	switch(col) {
-		case red: currCol = 4 | 8; break;
-		case green: currCol = 2 | 8; break;
-		case blue: currCol = 1 | 8; break;
-	}
+	int currCol = ColorToInt(col);
 	outputBuffer[i].Attributes = currCol;
 }
 
@@ -121,18 +136,37 @@ void flushScreen() {
 	SMALL_RECT smallRect = {0,0,(SHORT)size.width,(SHORT)size.height};
 	WriteConsoleOutput(hOut, &outputBuffer[0], buffSize, buffPos, &smallRect);
 
-	COORD pos = {(SHORT)currX, (SHORT)currY};
-	SetConsoleCursorPosition(hOut, pos);
 	LARGE_INTEGER end;
 	QueryPerformanceCounter(&end);
 
 	//std::cout << (1000*(end.QuadPart - start.QuadPart))/freq.QuadPart << " " << std::flush;
 }
 
+void shakeScreen(int x, int y) {
+	HWND consoleWindow = GetConsoleWindow();
+#ifndef tempDev
+// for some reason this crashes when compiling with cygwin g++
+	LPRECT currPos;
+	BOOL success = GetWindowRect(consoleWindow, currPos);
+	if (success) {
+		x += (int)currPos->left;
+		y += (int)currPos->top;
+	}
+#else
+	x += 10;
+	y += 10;
+#endif
+
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+
+	SetWindowPos(consoleWindow, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+
 
 
 int main() {
-	sleep(5000);
 	// https://docs.microsoft.com/en-us/windows/console/writeconsole
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -143,11 +177,17 @@ int main() {
 		return 123;
 	}
 
-	currSize = getTermSize();
+	SetConsoleTitle("LD41 ::::: Dememtory ::::::");
+	SMALL_RECT windowSize = {10, 10, 90, 30};
+	SetConsoleWindowInfo(hOut, TRUE, &windowSize);
+
 
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
 	setColor(Color::def);
+
+sleep(6000);
+	currSize = getTermSize();
 
 	LARGE_INTEGER prevTime;
 	LARGE_INTEGER currTime;
@@ -155,9 +195,54 @@ int main() {
 	QueryPerformanceCounter(&prevTime);
 	LONGLONG msPassed;
 
+	DWORD numRead;
+	INPUT_RECORD inputRecBuffer[128];
+	bool keyIsDown = false;
+	bool keyWasDown = false;
+
+	if (!SetConsoleMode(hIn, ENABLE_WINDOW_INPUT)) {
+		std::cout << "Error setting console mode" << std::endl;
+		sleep(5000);
+		return 1;
+	}
+
 	initGame();
 	bool lp = true;
 	while(lp) {
+
+		// CHECK INPUT
+		DWORD numEvents = 0;
+		GetNumberOfConsoleInputEvents(hIn, &numEvents);
+		if (numEvents > 0) {
+			ReadConsoleInput(hIn, inputRecBuffer, 128, &numRead);
+			for (int i=0; i<numRead; i++) {
+				switch(inputRecBuffer[i].EventType) {
+					case KEY_EVENT:
+						KEY_EVENT_RECORD keyEvent = inputRecBuffer[i].Event.KeyEvent;
+
+						keyIsDown = keyEvent.bKeyDown;
+						if (keyIsDown != keyWasDown) {
+							if (keyIsDown) {
+
+								if (keyEvent.uChar.UnicodeChar == 27) {
+									return 0;
+								}
+
+								//printAt(5, 5, "KEY IS DOWN! ");
+								//writeCharAt(5, 6, ' ');
+								//std::cout << "ascii: " << keyEvent.uChar.AsciiChar << std::flush;
+								//writeCharAt(5, 7, ' ');
+								//std::cout << "unicode: " << keyEvent.uChar.UnicodeChar << std::flush;
+
+							}
+						}
+						keyWasDown = keyIsDown;
+						break;
+				}
+			}
+		}
+
+		// Call game loop
 		QueryPerformanceCounter(&currTime);
 		msPassed = (1000*(currTime.QuadPart - prevTime.QuadPart)) / freq.QuadPart;
 		prevTime = currTime;
@@ -167,75 +252,16 @@ int main() {
 	}
 
 
-	sleep(2000);
 	// Handle input
 	// https://docs.microsoft.com/en-us/windows/console/reading-input-buffer-events
-	std::cout << "Press any key (escape to continue): " << std::flush;
-
-	DWORD numRead;
-	INPUT_RECORD inputRecBuffer[128];
-	if (!SetConsoleMode(hIn, ENABLE_WINDOW_INPUT)) {
-		std::cout << "Error setting console mode" << std::endl;
-		sleep(5000);
-		return 1;
-	}
-
-
-
-
-	
 
 	// TODO: We need to write a game loop. To measure performance, and to know how long to sleep, take a look at QueryPerformanceCounter
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644904(v=vs.85).aspx
 	// and
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/dn553408(v=vs.85).aspx
-	bool keyIsDown = false;
-	bool keyWasDown = false;
-	bool loop = true;
-	while (loop) {
-		// wait for event
-		ReadConsoleInput(hIn, inputRecBuffer, 128, &numRead);
-		//std::cout << numRead << " " << std::flush;
-		for (int i=0; i<numRead; i++) {
-			switch(inputRecBuffer[i].EventType) {
-				case KEY_EVENT:
-					KEY_EVENT_RECORD keyEvent = inputRecBuffer[i].Event.KeyEvent;
-
-					keyIsDown = keyEvent.bKeyDown;
-					if (keyIsDown != keyWasDown) {
-						if (keyIsDown) {
-							printAt(5, 5, "KEY IS DOWN! ");
-							writeCharAt(5, 6, ' ');
-							std::cout << "ascii: " << keyEvent.uChar.AsciiChar << std::flush;
-							writeCharAt(5, 7, ' ');
-							std::cout << "unicode: " << keyEvent.uChar.UnicodeChar << std::flush;
-
-							if (keyEvent.uChar.UnicodeChar == 27) {
-								loop = false;
-							}
-						}
-						else {
-							printAt(5, 5, "KEY IS UP!          ");
-							printAt(5, 6, "                    ");
-							printAt(5, 7, "                    ");
-						}
-					}
-					keyWasDown = keyIsDown;
-
-
-					//std::cout << "Key down: " << keyEvent.bKeyDown << " [" << "x" << "]" << std::flush;	
-					break;
-			}
-		}
-		sleep(16);
-	}
-
-
-
-
-
 
 	//COORD size = GetLargestConsoleWindowSize(hOut);
+	/*
 	COORD size = buffer.dwSize;
 	std::cout << "console width: " << size.X << ", height: " << size.Y << std::endl;
 	std::cout << "window size: " << buffer.srWindow.Top << ", " << buffer.srWindow.Bottom << std::endl;
@@ -283,7 +309,7 @@ int main() {
 
 	writeCharAt(1, 20, ' ');
 	std::cout << "\033[0m";
-
+*/
 
 
 

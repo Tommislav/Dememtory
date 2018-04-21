@@ -4,4 +4,11 @@
 *.swo
 *.exe
 *exe.stackdump
+*.swn
+*.swi
+*.swk
+*.swl
+*.swm
+*.swj
+*.obj
 debug
