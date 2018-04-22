@@ -6,6 +6,8 @@ set showmatch
 set nobackup
 set nowritebackup
 set splitright
+set autoindent
+set cindent
 
 nnoremap <f4> :make!<cr>
 nnoremap <f5> :!./textadventure<cr>

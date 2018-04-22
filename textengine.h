@@ -3,10 +3,14 @@
 
 #include <string>
 
+using namespace std;
 
 // sleep
 #include <chrono>
 #include <thread>
+
+#include <stdlib.h> // rand/srand
+#include <time.h> // time
 
 struct termSize {
 	int width, height;
@@ -65,8 +69,45 @@ int intFromChar(char c) {
 	for (int i=0; i<10; i++) {
 		if (nums[i] == c) return i;
 	}
-	return 0;
+	return -1;
 }
+
+
+void buildDeck(string* templateCards, string* deck, string* discovered, int numSolved, string unsolved) {
+	int numCards = 8;
+	int numValues = numCards / 2;
+
+	// copy values in order
+	for (int i=0; i<numValues; i++) {
+		string value = *(templateCards + i);
+		int i1 = i * 2;
+		int i2 = i * 2 + 1;
+		*(deck + i1) = value;
+		*(deck + i2) = value;
+
+		if (i >= numSolved) { value = unsolved; }
+		*(discovered + i1) = value;
+		*(discovered + i2) = value;
+	}
+
+	// shuffle both decks in the exact same way
+	srand(time(NULL));
+	for (int i=0; i<numCards; i++) {
+		int rnd = rand() % (numCards);
+
+		string temp1 = *(deck + i);
+		string temp2 = *(discovered + i); 
+
+		*(deck + i) = *(deck + rnd);	
+		*(deck + rnd) = temp1;	
+		*(discovered + i) = *(discovered + rnd);
+		*(discovered + rnd) = temp2;
+	}
+}
+
+
+
+
 
 /*
 // read string from file

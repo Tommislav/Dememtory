@@ -44,6 +44,7 @@ void wrParseCommand(Writer &writer, char command, char instr) {
 		else if (instr == '1') { writer.tim.wait = 30; } 
 		else if (instr == '2') { writer.tim.wait = 50; } 
 		else if (instr == '3') { writer.tim.wait = 150; } 
+		else if (instr == '9') { writer.tim.wait = -1; }
 	}
 	if (command == 'c') { // color
 		if (instr == 'R') { writer.col = Color::red; }
@@ -84,6 +85,8 @@ bool wrPutChar(Writer &writer, int millisec) {
 	printAt(c, writer.x, writer.y, writer.col);
 	writer.pos ++;
 	writer.x ++;
+
+	if (writer.tim.wait == -1) { wrPutChar(writer, 0); }
 	return true;
 }
 
