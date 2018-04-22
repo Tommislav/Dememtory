@@ -16,16 +16,6 @@ struct GameData {
 } gameData;
 
 const int MAX_OPTS = 16;
-/*
-struct Options {
-	string labels[MAX_OPTS];
-	char input[MAX_OPTS];
-	string states[MAX_OPTS];
-	int insanities[MAX_OPTS];
-	bool completed[MAX_OPTS];
-	int len;
-};
-*/
 
 struct Option {
 	string label;
@@ -45,7 +35,8 @@ struct Event {
 string randomCards[] = {
 	"Queen of spades", "King of diamonds", "Ace of hearts", "Jack of clubs",
    	"A picture of Mona Lisa", "A leaping tiger", "A cat with a pipe", "Two lovers holding each other",
-	"A firetruck", "A cloud that looks like a ship", "A magnifying glass", "An eye" };
+	"A firetruck", "A cloud that looks like a ship", "A magnifying glass", "An eye",
+	"It's a picture of Dusty", "A photo from my wedding", "A human brain", "A gun" };
 
 
 
@@ -77,8 +68,8 @@ string kitchen1 = "I'm standing by the fridge. Why did I go here again?"
 // look in fridge
 // look at coffe machine
 
-//Option kitchen1a = {"Open the #>Fridge", "fridge1", "fF"};
-//Option kitchen1b = {"Look at the #>Coffee machine", "coffee1", "cC"};
+Option kitchen1a = {"Open the #>Fridge", "fridge1", "fF"};
+Option kitchen1b = {"Look at the #>Coffee machine", "coffee1", "cC"};
 
 
 // --- fridge1
@@ -87,8 +78,8 @@ string fridge1 = "The fridge is almost empty. I should probably go to the grocar
 // pick up key
 // close door
 
-//Option fridge1a("Pick up the #>Key", "fridge1key", "kK");
-//Option fridge1b("#>Close the door", "fridge1close", "cC");
+Option fridge1a = {"Pick up the #>Key", "fridge1key", "kK"};
+Option fridge1b = {"#>Close the door", "fridge1close", "cC"};
 
 
 // --- fridge1key
@@ -107,8 +98,8 @@ string coffee1 = "I actually feel a little thirsty, a cup of coffee would be nic
 // connect power cord
 // don't connect power cord
 
-//Option coffee1a("#>Connect power cord", "coffee1power", "cC");
-//Option coffee1b("#>Don't connect the power cord", "coffe1dont", "dD");
+Option coffee1a = {"#>Connect power cord", "coffee1power", "cC"};
+Option coffee1b = {"#>Don't connect the power cord", "coffe1dont", "dD"};
 
 
 // --- coffee1power
@@ -169,20 +160,71 @@ Options memory = {
 string memoryRandom[] = {textMemoryWife, textMemoryThirsty, textMemoryCat};
 */
 
+void setEventText(Event* e, string s) {
+	e->text = s;
+	e->numOptions = 0;
+}
+void addEventOpt(Event* e, Option o) {
+	e->options[e->numOptions] = o;
+	e->numOptions++;
+}
 
+void getEvent(Event* e) {
 
-void getEvent(Event* event) {
-	if (gameData.currentState == "play" || gameData.currentState =="play2") {
-		event->text = "";
-		event->numOptions = 0;
+	if (gameData.currentState == "start") {
+		setEventText(e, textStart);
+		addEventOpt(e, play);
+		return;
+	}
+
+	if (gameData.round == 3 && gameData.roundStep == 0) {
+		gameData.currentState = "flashback1";
+		setEventText(e, flashback1);	
+		addEventOpt(e, flashback1a);
+		addEventOpt(e, flashback1b);
+		return;
+	}
+	if (gameData.currentState == "kitchen1") {
+		setEventText(e, kitchen1);
+		addEventOpt(e, kitchen1a);
+		addEventOpt(e, kitchen1b);
+		return;
+	}
+	if (gameData.currentState == "fridge1") {
+		setEventText(e, fridge1);
+		addEventOpt(e, fridge1a);
+		addEventOpt(e, fridge1b);
+		return;
+	}
+	if (gameData.currentState == "fridge1key") {
+		setEventText(e, fridge1key + kitchen1_ending);
+		addEventOpt(e, play);
+		return;
+	}
+	if (gameData.currentState == "fridge1close") {
+		setEventText(e, fridge1close + kitchen1_ending);
+		addEventOpt(e, play);
+		return;
+	}
+	if (gameData.currentState == "coffee1") {
+		setEventText(e, coffee1);
+		addEventOpt(e, coffee1a);
 		return;
 	}
 
 
 
-	event->text = textStart;
-	event->options[0] = play;
-	event->numOptions = 1;
+
+
+	if (gameData.currentState == "play" || gameData.currentState =="play2") {
+		setEventText(e, "");
+		return;
+	}
+	if (gameData.currentState == "result") {
+		setEventText(e, ""); 
+		addEventOpt(e, play);
+		return;
+	}
 }
 
 
@@ -205,3 +247,20 @@ string getCardsLayout(string* values, string* deck, int selected1, int selected2
 	s += "#s1#p2 ";
 	return s;
 }
+
+
+
+/*
+string title[10];
+title[0] = "▓█████▄ ▓█████   ███▄ ▄███▓ ▓█████  ███▄ ▄███▓ ▄▄▄█████▓ ▒█████     ██▀███ ▓██   ██▓";
+title[1] = "▒██▀ ██▌▓█   ▀  ▓██▒▀█▀ ██▒ ▓█   ▀ ▓██▒▀█▀ ██▒ ▓  ██▒ ▓▒▒██▒  ██▒  ▓██ ▒ ██▒▒██  ██▒";
+title[2] = "░██   █▌▒███    ▓██    ▓██░ ▒███   ▓██    ▓██░ ▒ ▓██░ ▒░▒██░  ██▒  ▓██ ░▄█ ▒ ▒██ ██░";
+title[3] = "░▓█▄   ▌▒▓█  ▄  ▒██    ▒██  ▒▓█  ▄ ▒██    ▒██  ░ ▓██▓ ░ ▒██   ██░  ▒██▀▀█▄   ░ ▐██▓░";
+title[4] = "░▒████▓ ░▒████▒ ▒██▒   ░██▒ ░▒████▒▒██▒   ░██▒   ▒██▒ ░ ░ ████▓▒░  ░██▓ ▒██▒ ░ ██▒▓░";
+title[5] = " ▒▒▓  ▒ ░░ ▒░ ░ ░ ▒░   ░  ░ ░░ ▒░ ░░ ▒░   ░  ░   ▒ ░░   ░ ▒░▒░▒░   ░ ▒▓ ░▒▓░  ██▒▒▒ "; 
+title[6] = " ░ ▒  ▒  ░ ░  ░ ░  ░      ░  ░ ░  ░░  ░      ░     ░      ░ ▒ ▒░     ░▒ ░ ▒░▓██ ░▒░ "; 
+title[7] = " ░ ░  ░    ░    ░      ░       ░   ░      ░      ░      ░ ░ ░ ▒      ░░   ░ ▒ ▒ ░░  ";  
+title[8] = "   ░       ░  ░        ░       ░  ░       ░                 ░ ░       ░     ░ ░     "; 
+title[9] = " ░                                                                          ░ ░     "; 
+*/
+

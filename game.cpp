@@ -27,7 +27,6 @@ Writer optWriter;
 termSize screenSize;
 
 
-
 void setGameState(string);
 
 void initGame() {
@@ -157,14 +156,14 @@ bool defaultWrite(int millisec) {
 
 
 void setGameState(string state) {
-	gameData.roundStep++;
 	gameData.currentState = state;
 	clearScreen();
 
 	getEvent(&currentEvent);
+	gameData.roundStep++;
 
-	if (state == "play" || state == "play2" || state == "result") {
-		if (state == "play") {
+	if (gameData.currentState == "play" || gameData.currentState == "play2" || gameData.currentState == "result") {
+		if (gameData.currentState == "play") {
 			gameData.pickedCard1 = -1;
 			gameData.pickedCard2 = -1;
 		}
@@ -177,7 +176,7 @@ void setGameState(string state) {
 		
 		stateFunction = &defaultWrite;
 
-		if (state == "result") {
+		if (gameData.currentState == "result") {
 
 			string card1 = gameData.pickedCard1 < 0 ? "ERR":gameData.deck[gameData.pickedCard1];
 			string card2 = gameData.pickedCard2 < 0 ? "ERR":gameData.deck[gameData.pickedCard2];
