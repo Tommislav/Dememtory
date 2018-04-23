@@ -22,6 +22,7 @@ struct GameData {
 	bool daughterInformed;
 	bool coffeeOn;
 	bool gameOver;
+	string ending;
 	
 } gameData;
 
@@ -55,7 +56,7 @@ string startScreen = "#cR"
 "#s9                               #s1==============#cD#p3#n #n "
 "A text adventure combining #cBDementia#cD and the card game #cBMemory#cD.#p2#n "
 "Made for Ludum Dare 41#p2 by #cBTommy Salomonsson#cD.#n #n "
-"Instructions:#n #s3Press Space Bar if you ever want to speed up the text (go ahead and try it right away). Sometimes you just want to skip right to the end.";
+"Instructions:#n #s3Press Space Bar if you ever want to speed up the text (as in #cBPRESS AND HOLD#cD... go ahead and try it right away). Sometimes you just want to skip right to the end.";
 Option tut = {"To select an action (white text), type the #>Purple character on your keyboard. That would be a 'P' in this case!", "start", "pP"};
 
 
@@ -227,11 +228,11 @@ Option walking3b = {"#>Struggle to get free", "flashback2ending", "sS" };
 string badending1 = "It takes several tries to start the car. The first time the gear is too high. The "
 "second time I forget to release the hand break. But at last I'm out on the road.#n #n #p3"
 "I was a really good driver when I was young, and I still enjoy a good ride with the wind blowing in my "
-"hair. I gear up and wind down the side window.#n #n p3"
+"hair. I gear up and wind down the side window.#n #n #p3"
 "In the passenger seat sits #cBElise#cD. She is so young and so beautiful, and her smile is to die for.#p3 "
 "She's smiling now.#p3 The blond hair flowing in the wind.#p2 I press the gas pedal a bit more.#n #n "
-"#p3#s3I'm feeling so happy.#s2 #n #n #n "
-"#cRGAME OVER (ending 1/4)#cD#s1";
+"#s3I'm feeling so happy.#s2#n #n #n "
+"#cRGAME OVER! (you reached ending: 'BAD_ENDING_CAR')#cD#s1";
 
 // --- flashback2ending
 string flashback2ending = "I'm sitting at the kitchen table again. I'm cold and has a feeling of shame, "
@@ -262,7 +263,7 @@ string badending2 = "I suddenly smell smoke. Who can it be that is smoking? I kn
 "I should really... do... Argh, I can't think with this alarm constantly ringing. And I'm tired.#n #n "
 "Tired of being alone. Tired of feeling ashamed. Tired of this loud alarm. And actually just plain tired.#n #n "
 "I should go to bed. Tomorrow I'm sure Dusty will come back home.#n #n #n #s2#cR"
-"GAME OVER (ending 2/4)#cD#s1";
+"GAME OVER! (You reached ending: 'BAD_ENDING_SMOKE')#cD#s1";
 
 // --- out4
 string out4 = "I'm outside. I'm walking on the sidewalk. I'm freezing my butt off!#n #n "
@@ -280,7 +281,7 @@ string badending3 = "I quickly step in behind the trees. I don't think the polic
 "A cat meows. It's Dusty! Where have you been all this time?!?#n #n "
 "He only looks at me, and starts walking. His black fur gleaming.#n #n "
 "He is leading me home!#n #n #n #s2#cR"
-"GAME OVER (ending 3/4)#cD#s1";
+"GAME OVER! (You reached ending: 'BAD_ENDING_FOREST')#cD#s1";
 
 // --- flashback3ending
 string flashback3ending = "I'm sitting at my kitchen table. In front of me is a partially completed "
@@ -298,11 +299,14 @@ string flashback4daughter = "So I hear you are out walking the neighbourhood in 
 "I'll sleep over tonight so you don't wander away again. Oh, and one more thing! ";
 
 string flashback4cont = "She brings me a cage with a black cat in it. It's Dusty! She found him!#n "
-"'I thought you needed someone to keep you company', she says. I'm so happy! Elise is home and Dusty "
+"'I thought you needed someone to keep you company, and you always loved cats', she says. I'm so happy! Elise is home and Dusty "
 "is finally back! #n #n "
 "We spend the rest of the evening playing memory together. Dusty is lying in my lap, purring. "
 "Her memory is still much better than mine. #s3I'm so happy!#n #n #s2#cR"
-"GAME OVER (4/4)#s1#cD ";
+"GAME OVER! ";
+
+string flashback4endpartial = "(You reached ending: 'GOOD_ENDING_PARTIAL)#s1#cD ";
+string flashback4endfull = "(You reached ending: 'GOOD_ENDING_FULL)#s1#cD ";
 
 void setEventText(Event* e, string s) {
 	e->text = s;
@@ -510,11 +514,11 @@ void getEvent(Event* e) {
 	if (gameData.flashbackCount == 3 && gameData.solved == 4) {
 		gameData.currentState = "flashback4";
 		if (gameData.daughterInformed) {
-			setEventText(e, flashback4 + flashback4daughter + flashback4cont);
+			setEventText(e, flashback4 + flashback4daughter + flashback4cont + flashback4endfull);
 			gameData.gameOver = true;
 		}
 		else {
-			setEventText(e, flashback4 + flashback4cont);
+			setEventText(e, flashback4 + flashback4cont + flashback4endpartial);
 			gameData.gameOver = true;
 		}
 		addEventOpt(e, endGame);
