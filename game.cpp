@@ -31,10 +31,10 @@ void setGameState(string);
 
 void initGame() {
 	screenSize = getTermSize();
-	buildDeck(&randomCards[8], &gameData.deck[0], &gameData.discovered[0], gameData.solved, gameData.unsolved);
+	buildDeck(&randomCards[0], &gameData.deck[0], &gameData.discovered[0], gameData.solved, gameData.unsolved);
 	gameData.pickedCard1 = -1;
 	gameData.pickedCard2 = -1;
-	setGameState("start");
+	setGameState("startScreen");
 }
 
 
@@ -54,7 +54,7 @@ string updateAvailableCardsForInput(string nextState) {
 			scenes[listenForInputLen] = nextState;
 			listenForInputLen++;
 			cnt++;
-		}
+			}
 	}
 	if (cnt == 0) { return ""; }
 	opt += "#s1 #n ";
@@ -82,7 +82,6 @@ void setOptions() {
 	s += ">>> ";
 	int y = writer.y;
 	wrSetText(optWriter, s, 0, y+2);
-	optWriter.tim.wait = -1;
 }
 
 bool keyIsDown(const char &c) {
@@ -160,10 +159,26 @@ void setGameState(string state) {
 	clearScreen();
 
 	getEvent(&currentEvent);
+
+	if (gameData.flushDeck > 0) {
+		gameData.timesPlayed = 0;
+		if (gameData.flushDeck == 1) {
+			if (gameData.solved > 2) { gameData.solved = 2; }
+			buildDeck(&randomCards[4], &gameData.deck[0], &gameData.discovered[0], gameData.solved, gameData.unsolved);
+		}
+		else if (gameData.flushDeck == 2) {
+			buildDeck(&randomCards[8], &gameData.deck[0], &gameData.discovered[0], 0, gameData.unsolved);
+			gameData.solved = 0;
+		}
+
+		gameData.flushDeck = 0;
+	}
+
 	gameData.roundStep++;
 
 	if (gameData.currentState == "play" || gameData.currentState == "play2" || gameData.currentState == "result") {
 		if (gameData.currentState == "play") {
+			gameData.timesPlayed++;
 			gameData.pickedCard1 = -1;
 			gameData.pickedCard2 = -1;
 		}
@@ -183,7 +198,7 @@ void setGameState(string state) {
 
 			bool match = card1 == card2;
 			string matchText = "That is a match!#p3 ";
-			string failText = "That is not right... I slowly flip the cards back again.#p2 ";
+			string failText = "That is not right. I slowly flip the cards back again.#p2 ";
 			cardsLayout +="#n " + (match ? matchText : failText);
 			if (match) { 
 				gameData.discovered[gameData.pickedCard1] = card1;

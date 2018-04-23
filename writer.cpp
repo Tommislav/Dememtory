@@ -82,6 +82,10 @@ bool wrPutChar(Writer &writer, int millisec) {
 		return wrPutChar(writer, millisec);
 	}
 
+	if (c == '.') {
+		writer.tim.pause = 500;
+	}
+
 	printAt(c, writer.x, writer.y, writer.col);
 	writer.pos ++;
 	writer.x ++;
