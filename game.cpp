@@ -7,7 +7,28 @@
 #include <stdlib.h> // rand/srand
 #include <time.h> // time
 
+#include <sstream> // temp for converting int to string
+
 using namespace std;
+
+
+string tickTick = "Sweat is trickling down my forehead. The #cRbomb#cD is about to detonate any second now!#p3 #s3#cBTICK#p2 TICK#p2 TICK #p3    ";
+
+string boom = ""
+"             888888b.    .d88888b.   .d88888b.  888b     d888 888#n " 
+"             888   88b  d88P   Y88b d88P   Y88b 8888b   d8888 888#n " 
+"             888  .88P  888     888 888     888 88888b.d88888 888#n " 
+"             8888888K.  888     888 888     888 888Y88888P888 888#n " 
+"             888   Y88b 888     888 888     888 888 Y888P 888 888#n " 
+"             888    888 888     888 888     888 888  Y8P  888 Y8P#n " 
+"             888   d88P Y88b. .d88P Y88b. .d88P 888       888    #n " 
+"             8888888P     Y88888P     Y88888P   888       888 888#n ";
+
+
+
+
+
+
 
 
 bool (*stateFunction)(int);
@@ -27,14 +48,27 @@ Writer optWriter;
 termSize screenSize;
 
 
+
+Writer wrTick;
+Writer wrBoom;
+timer boomTimer;
+timer shakeTimer;
+coord startWndPos;
+
+
 void setGameState(string);
 
 void initGame() {
 	screenSize = getTermSize();
-	buildDeck(&randomCards[0], &gameData.deck[0], &gameData.discovered[0], gameData.solved, gameData.unsolved);
-	gameData.pickedCard1 = -1;
-	gameData.pickedCard2 = -1;
-	setGameState("startScreen");
+
+	wrSetText(wrTick, tickTick, 0, 1);
+	wrSetText(wrBoom, boom, 0, 6);
+	wrTick.tim.wait = 30;
+	wrBoom.tim.wait = -1;
+	boomTimer.wait = 20;
+	shakeTimer.wait = 10;
+    setRandSeed();
+	startWndPos = getWindowPos();
 }
 
 
@@ -110,19 +144,57 @@ char checkInput() {
 }
 
 
-
+int boomCnt = 0;
+int shakeCountdown = 2000;
 bool tick(int millisec) {
-	if (stateTransition > 0) {
-		stateTransition -= millisec;
-		if (stateTransition <= 0) { setGameState(transitionToState); }
-		return true;
-	}
 
-	// writerSkip is in writer.cpp
-	// skipButtonDown is set from platform layer
-	// yuck, this should be done beter...
-	writerSkip = skipButtonDown;
-	return stateFunction(millisec);
+	bool needRedraw = false;
+
+	if (!wrAtEnd(wrTick)) {
+		needRedraw = wrPutChar(wrTick, millisec);
+		if (needRedraw) {
+			setCursorPos(wrTick.x, wrTick.y);
+		}
+	}
+	else {
+
+		if (shakeCountdown > 0) {
+			shakeCountdown -= millisec;
+
+			if (shakeTimer.countDown(millisec, false)) {
+				coord c;
+				c.x = startWndPos.x + (getRand(20) - 10);
+				c.y = startWndPos.y + (getRand(20) - 10);
+				shakeScreen(c.x, c.y);
+			}
+
+
+			if (boomTimer.countDown(millisec, false)) {
+				clearScreen();
+				wrBoom.col = Color::green;
+
+
+				Color col[4] = {Color::red, Color::purple, Color::white, Color::blue};
+				boomCnt = (boomCnt + 1) % 4;
+				wrBoom.col = col[boomCnt];
+				//clearScreen();
+				wrBoom.pos = 0;
+				wrBoom.x = 0;
+				wrBoom.y = wrBoom.startY;
+
+				//wrPutChar(wrTick, millisec);
+				wrPutChar(wrBoom, millisec);
+				needRedraw = true;
+				setCursorPos(0, 0);
+
+			}
+		}
+
+	}
+	if (needRedraw) {
+		flushScreen();	
+	}
+	return true;
 }
 
 

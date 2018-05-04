@@ -54,11 +54,23 @@ void print(std::string);
 void print(char c);
 void printAt(char c, int x, int y, Color col);
 
+void debug(string s);
+
 void setColor(Color col);
 void setColorAt(Color col, int x, int y);
 void flushScreen();
 
+coord getWindowPos();
 void shakeScreen(int x, int y);
+
+void setRandSeed() {
+    srand(time(NULL));
+}
+int getRand(int n){
+	int rnd = rand() % n;
+	return rnd;
+}
+
 
 void sleep(int ms) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));

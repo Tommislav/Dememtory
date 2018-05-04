@@ -28,7 +28,7 @@ termSize getTermSize() {
 	}
 	COORD size = buffer.dwSize;
 	int height = buffer.srWindow.Bottom - buffer.srWindow.Top;
-	int width = buffer.srWindow.Right - buffer.srWindow.Left;
+	int width = buffer.srWindow.Right - buffer.srWindow.Left + 1;
 	if (height > MAX_HEIGHT) { height = MAX_HEIGHT; }
 	termSize t;
 	t.width = width > MAX_WIDTH ? MAX_WIDTH : width;
@@ -99,11 +99,17 @@ void print(char c) {
 }
 
 void debug(string s) {
-	debugStr = s;
+    int i = 0;
+    int len = s.length();
+    for (int j = 0; j<len; j++) {
+        outputBuffer[i + j].Char.UnicodeChar = s[j];
+        outputBuffer[i + j].Attributes = 8;
+    }
+    flushScreen();
 }
 
 void clearDebug(int y) {
-	debugStr = "";
+    debug("                      ");
 }
 
 void setColor(Color col) {
@@ -139,25 +145,26 @@ void flushScreen() {
 	//std::cout << (1000*(end.QuadPart - start.QuadPart))/freq.QuadPart << " " << std::flush;
 }
 
-void shakeScreen(int x, int y) {
-	HWND consoleWindow = GetConsoleWindow();
-#ifndef cygwin 
-// for some reason this crashes when compiling with cygwin g++
-	LPRECT currPos = {};
-	BOOL success = GetWindowRect(consoleWindow, currPos);
+HWND consoleWindow;
+coord getWindowPos() {
+	coord retValue = {};
+#ifndef cygwin
+	consoleWindow = GetConsoleWindow();
+	RECT currPos = {};
+	BOOL success = GetWindowRect(consoleWindow, &currPos);
 	if (success) {
-		x += (int)currPos->left;
-		y += (int)currPos->top;
+		retValue.x = (int)currPos.left;
+		retValue.y = (int)currPos.top;
 	}
-#else
-	x += 10;
-	y += 10;
 #endif
+	return retValue;
+}
 
-	if (x < 0) x = 0;
-	if (y < 0) y = 0;
 
-	SetWindowPos(consoleWindow, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+void shakeScreen(int x, int y) {
+	
+	BOOL success = SetWindowPos(consoleWindow, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
 }
 
 
@@ -172,7 +179,7 @@ int main() {
 		return 123;
 	}
 
-	SetConsoleTitle("LD41 ::::: Dememtory ::::::");
+	SetConsoleTitle("::::: SCREEN SHAKE ::::::");
 	SMALL_RECT windowSize = {10, 10, 90, 30};
 	SetConsoleWindowInfo(hOut, TRUE, &windowSize);
 
