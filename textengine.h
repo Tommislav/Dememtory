@@ -1,5 +1,6 @@
-#ifndef TEXTENGINE_H
-#define TEXTENGINE_H
+#pragma once
+//#ifndef TEXTENGINE_H
+//#define TEXTENGINE_H
 
 #include <string>
 
@@ -48,17 +49,11 @@ enum Color { def, red, blue, green, white, purple };
 void clearScreen();
 termSize getTermSize();
 void setCursorPos(int x, int y);
-coord getCursorPos();
-void printAt(std::string str, int x, int y);
-void print(std::string);
-void print(char c);
 void printAt(char c, int x, int y, Color col);
 
-void setColor(Color col);
-void setColorAt(Color col, int x, int y);
 void flushScreen();
 
-void shakeScreen(int x, int y);
+//void shakeScreen(int x, int y);
 
 void sleep(int ms) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
@@ -125,4 +120,4 @@ std::string readFromFile(std::string fileName) {
 }
 */
 
-#endif
+//#endif

@@ -48,13 +48,7 @@ void setCursorPos(int x, int y) {
 	SetConsoleCursorPosition(hOut, pos);
 }
 
-coord getCursorPos(){
-	coord c;
-	c.x = currX;
-	c.y = currY;
-	return c;
-}
-
+//@private
 int ColorToInt(Color col) {
 	int currCol = 1 | 2 | 4;
 	switch(col) {
@@ -68,46 +62,10 @@ int ColorToInt(Color col) {
 	return currCol;
 }
 
-void print(string str) {
-	int i = currY * currSize.width + currX;
-	int len = str.length();
-	for (int j=0; j<len; j++) {
-		outputBuffer[i+j].Char.UnicodeChar = str[j];
-		outputBuffer[i+j].Attributes = 8;
-	}
-}
-
-void printAt(string s, int x, int y) {
-}
-
 void printAt(char c, int x, int y, Color col) {
 	int i = y * currSize.width + x;	
 	outputBuffer[i].Char.UnicodeChar = c;	
 	outputBuffer[i].Attributes = ColorToInt(col);
-}
-
-
-void print(char c) {
-	int i=currY * currSize.width + currX;
-	currX ++;
-	if (currX >= currSize.width) {
-		currX = 0;
-		currY++;
-	}
-	outputBuffer[i].Char.UnicodeChar = c;
-	outputBuffer[i].Attributes = currCol;
-}
-
-void debug(string s) {
-	debugStr = s;
-}
-
-void clearDebug(int y) {
-	debugStr = "";
-}
-
-void setColor(Color col) {
-	setColorAt(col, currX, currY);
 }
 
 void setColorAt(Color col, int x, int y) {
@@ -115,6 +73,10 @@ void setColorAt(Color col, int x, int y) {
 	int currCol = ColorToInt(col);
 	outputBuffer[i].Attributes = currCol;
 }
+
+//void setColor(Color col) {
+//	setColorAt(col, currX, currY);
+//}
 
 LARGE_INTEGER freq;
 
@@ -179,7 +141,7 @@ int main() {
 
 	COORD pos = {0,0};
 	SetConsoleCursorPosition(hOut, pos);
-	setColor(Color::def);
+	//setColor(Color::def);
 
 	currSize = getTermSize();
 
