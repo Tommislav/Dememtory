@@ -4,6 +4,7 @@
 #include "writer.cpp"
 #include "data.cpp"
 
+
 #include <stdlib.h> // rand/srand
 #include <time.h> // time
 
@@ -31,7 +32,9 @@ void setGameState(string);
 
 void initGame() {
 	screenSize = getTermSize();
-	buildDeck(&randomCards[0], &gameData.deck[0], &gameData.discovered[0], gameData.solved, gameData.unsolved);
+	buildDeck(&randomCards[0], &gameData.deck[0], &gameData.discovered[0], 
+			gameData.solved, gameData.unsolved);
+
 	gameData.pickedCard1 = -1;
 	gameData.pickedCard2 = -1;
 	setGameState("startScreen");
