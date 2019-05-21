@@ -4,7 +4,8 @@
 
 using namespace std;
 
-bool writerSkip = false;
+bool writerFastForward = false;
+bool writerSkipToEnd = false;
 
 
 struct Writer {
@@ -40,11 +41,11 @@ void wrParseCommand(Writer &writer, char command, char instr) {
 		else if (instr == '3') { writer.tim.pause = 1500; }
 	}
 	if (command == 's') { // speed 
-		if (instr == '0') { writer.tim.wait = 5; }
-		else if (instr == '1') { writer.tim.wait = 30; } 
-		else if (instr == '2') { writer.tim.wait = 50; } 
-		else if (instr == '3') { writer.tim.wait = 150; } 
-		else if (instr == '9') { writer.tim.wait = -1; }
+		if (instr == '0') { writer.tim.speed = 5; }
+		else if (instr == '1') { writer.tim.speed = 30; } 
+		else if (instr == '2') { writer.tim.speed = 50; } 
+		else if (instr == '3') { writer.tim.speed = 150; } 
+		else if (instr == '9') { writer.tim.speed = -1; }
 	}
 	if (command == 'c') { // color
 		if (instr == 'R') { writer.col = Color::red; }
@@ -61,25 +62,20 @@ void wrParseCommand(Writer &writer, char command, char instr) {
 }
 
 
-
-bool wrPutChar(Writer &writer, int millisec) {
-	if (wrAtEnd(writer)) {return false;}
-	if (millisec > -1) {
-		if (!writer.tim.countDown(millisec, writerSkip)) {
-			return false;
-		}
-	}
-
+// @private: actually put one more character on screen. No check for Eof or nuthin
+void __wrPutChar(Writer &writer) {
 	char c = writer.text[writer.pos];
 	if (c == '^') {
 		wrParseCommand(writer, 'n', ' ');
 		writer.pos++;
-		return wrPutChar(writer, millisec);
+	//	__wrPutChar(writer);
+		return;
 	}
 	else if (c == '#') {
 		wrParseCommand(writer, writer.text[writer.pos+1], writer.text[writer.pos+2]);
 		writer.pos += 3;
-		return wrPutChar(writer, millisec);
+	//	__wrPutChar(writer);
+		return;
 	}
 
 	if (c == '.') {
@@ -89,10 +85,39 @@ bool wrPutChar(Writer &writer, int millisec) {
 	printAt(c, writer.x, writer.y, writer.col);
 	writer.pos ++;
 	writer.x ++;
+}
 
-	if (writer.tim.wait == -1) { wrPutChar(writer, 0); }
+// Write out every single character until we reach the end. No timers. No waiting.
+void wrFlushEverything(Writer &writer) {
+	while(!wrAtEnd(writer)) {
+		__wrPutChar(writer);
+	}
+}
+
+bool wrPutChar(Writer &writer, int millisec) {
+	if (wrAtEnd(writer)) {return false;}
+
+	if (millisec == -1 || writerSkipToEnd) {
+		writerSkipToEnd = false;
+		wrFlushEverything(writer);
+		return true;
+	}
+
+	if (writer.tim.speed == -1) {
+		while (!wrAtEnd(writer) && writer.tim.speed == -1) {
+			__wrPutChar(writer);
+		}
+		return true;
+	}
+
+	if (!writer.tim.countDown(millisec, writerFastForward)) {
+		return false;
+	}
+
+	__wrPutChar(writer);
 	return true;
 }
+
 
 void wrResize(Writer &writer) {
 	termSize size = getTermSize();
@@ -137,7 +162,7 @@ void wrSetText(Writer &writer, string text, int startX, int startY) {
 	writer.len = text.size();
 	writer.startX = writer.x = startX;
 	writer.startY = writer.y = startY;
-	writer.tim.wait = 30;
+	writer.tim.speed = 30;
 	wrResize(writer);
 }
 

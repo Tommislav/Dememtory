@@ -145,11 +145,11 @@ void cleanupNcurses() {
 
 void fetchKeyboardInput() {
 	numKeysDown = 0;
-	skipButtonDown = false;
+	fastForwardButtonDown = false;
 	int c;
 	while((c = getch()) != ERR) {
 		keysDown[numKeysDown++] = (char)c;
-		if ((char)c == ' ') { skipButtonDown = true; }
+		if ((char)c == ' ') { skipToEndButtonPressed = true; }
 	}
 }
 

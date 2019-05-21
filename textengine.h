@@ -22,21 +22,21 @@ struct coord {
 
 struct timer {
 	int counter; // current countdown (towards 0)
-	int wait; // how much to reset to (when counter <= 0)
-	int skipWait;
+	int speed; // how much to reset to (when counter <= 0)
+	int fastSpeed;
 	int pause; // pause counter that needs to reach 0 first
 	bool isBreak; // if break, don't count down
 
-	timer():counter(0), wait(30), skipWait(5), pause(0), isBreak(false) {}
+	timer():counter(0), speed(30), fastSpeed(5), pause(0), isBreak(false) {}
 
-	bool countDown(int time, bool skip) {
+	bool countDown(int time, bool fastForward) {
 		if (isBreak) { return false; }
-		if (!skip && pause > 0) { pause -= time; return false; }
+		if (!fastForward && pause > 0) { pause -= time; return false; }
 		if (counter > 0) {
 			counter -= time;
 		}
 		if (counter <= 0) {
-			counter = skip ? skipWait : wait;
+			counter = fastForward ? fastSpeed : speed;
 			return true;
 		}
 		return false;

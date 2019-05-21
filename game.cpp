@@ -18,7 +18,8 @@ string scenes[MAX_OPTS];
 int listenForInputLen;
 char keysDown[128];
 int numKeysDown = 0;
-bool skipButtonDown;
+bool fastForwardButtonDown; // not very nice, but this is called from platform layer
+bool skipToEndButtonPressed; // on linux/mac we cannot get keyup events. So we get this gimped version
 int stateTransition;
 string transitionToState;
 char lastStateInput;
@@ -121,10 +122,13 @@ bool tick(int millisec) {
 		return true;
 	}
 
-	// writerSkip is in writer.cpp
-	// skipButtonDown is set from platform layer
+	// writerFastForward is in writer.cpp
+	// fastForwardButtonDown is set from platform layer
 	// yuck, this should be done beter...
-	writerSkip = skipButtonDown;
+	writerFastForward = fastForwardButtonDown;
+	writerSkipToEnd = skipToEndButtonPressed;
+	skipToEndButtonPressed = false; // reset buttonDown state
+
 	return stateFunction(millisec);
 }
 

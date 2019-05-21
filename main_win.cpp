@@ -178,8 +178,8 @@ int main() {
 					KEY_EVENT_RECORD keyEvent = inputRecBuffer[i].Event.KeyEvent;
 
 					if (keyEvent.uChar.UnicodeChar == 32) {
-						// skipButton is in game.cpp
-						skipButtonDown = keyEvent.bKeyDown;
+						// fastForwardButton is in game.cpp
+						fastForwardButtonDown = keyEvent.bKeyDown;
 					}
 
 					if (keyEvent.bKeyDown || keyEvent.wRepeatCount > 0) {
